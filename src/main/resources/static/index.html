@@ -7,53 +7,212 @@
   <style>
     :root { font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; color: #1f2937; }
     body { margin: 0; background: #f9fafb; }
-    .container { max-width: 820px; margin: 40px auto; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
-    h1 { margin-top: 0; font-size: 28px; }
-    .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0; }
-    label { display:block; margin-bottom: 8px; font-weight: 600; }
+    .container { max-width: 980px; margin: 32px auto; padding: 0 16px; }
+    .header { background: white; border-radius: 12px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    h1 { margin: 0 0 6px 0; font-size: 28px; }
+    .subtitle { color: #6b7280; margin: 0 0 8px; }
+    .grid { margin-top: 16px; display: grid; gap: 16px; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); }
+    .card { background: white; border: 1px solid #e5e7eb; border-radius: 12px; padding: 16px; box-shadow: 0 6px 14px rgba(0,0,0,0.05); }
+    .card h3 { margin: 0 0 12px; }
+    label { display:block; margin: 10px 0 6px; font-weight: 600; font-size: 13px; }
     input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
-    button { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
-    button:hover { background: #1d4ed8; }
-    .row { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
-    .result { background: #f3f4f6; padding: 12px; border-radius: 8px; word-break: break-all; }
+    .row { display: flex; gap: 8px; align-items: center; margin-top: 10px; flex-wrap: wrap; }
+    button { background: #2563eb; color: white; border: none; padding: 9px 14px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 13px; }
+    button.secondary { background: #6b7280; }
+    button.warning { background: #dc2626; }
+    button:hover { filter: brightness(0.95); }
+    .result { background: #f3f4f6; padding: 12px; border-radius: 8px; word-break: break-all; font-size: 12px; }
+    .muted { color: #6b7280; font-size: 12px; }
+    .pill { display:inline-block; padding: 2px 8px; border-radius: 999px; background:#eef2ff; color:#3730a3; font-size: 12px; font-weight: 600; }
+    .badge { display:inline-block; padding: 2px 6px; border-radius: 6px; background:#ecfeff; color:#0e7490; font-size: 12px; }
+    .table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .table th, .table td { padding: 8px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+    .table th { text-align: left; color: #6b7280; font-weight: 600; }
+    .actions { display:flex; gap:6px; flex-wrap: wrap; }
     code { background: #111827; color:#f9fafb; padding: 2px 6px; border-radius: 6px; }
   </style>
 </head>
 <body>
 <div class="container">
-  <h1>URL Shortening Service</h1>
-
-  <div class="card">
-    <h3>Create Short URL</h3>
-    <label for="createUrl">Original URL</label>
-    <input id="createUrl" type="text" placeholder="https://example.com/very/long/path" />
-    <div class="row">
-      <button onclick="createShortUrl()">Create</button>
-    </div>
-    <div id="createResult" class="result"></div>
+  <div class="header">
+    <h1>URL Shortening Service</h1>
+    <p class="subtitle">Crea, consulta, actualiza, elimina y redirige URLs cortas. <span class="badge">API</span> <a href="/swagger-ui/index.html" target="_blank">Swagger UI</a></p>
+    <div class="muted">Base redirect: <code id="baseRedirect"></code></div>
   </div>
 
-  <div class="card">
-    <h3>Retrieve Original URL</h3>
-    <label for="code">Short Code</label>
-    <input id="code" type="text" placeholder="abc123" />
-    <div class="row">
-      <button onclick="getUrl()">Get</button>
-      <button onclick="getStats()">Stats</button>
+  <div class="grid">
+    <div class="card">
+      <h3>Crear Short URL</h3>
+      <label for="createUrl">URL original</label>
+      <input id="createUrl" type="text" placeholder="https://example.com/very/long/path" />
+      <div class="row">
+        <button onclick="createShortUrl()">Crear</button>
+        <button class="secondary" onclick="clearField('createUrl')">Limpiar</button>
+      </div>
+      <div id="createInfo" class="muted"></div>
+      <div id="createResult" class="result"></div>
     </div>
-    <div id="getResult" class="result"></div>
+
+    <div class="card">
+      <h3>Consultar / Stats / Redirigir</h3>
+      <label for="code">Short code</label>
+      <input id="code" type="text" placeholder="abc123" />
+      <div class="row">
+        <button onclick="getUrl()">GET /shorten/{code}</button>
+        <button onclick="getStats()">GET /shorten/{code}/stats</button>
+        <button class="secondary" onclick="openRedirect()">Abrir /r/{code}</button>
+      </div>
+      <div id="getResult" class="result"></div>
+    </div>
+
+    <div class="card">
+      <h3>Actualizar Short URL</h3>
+      <label for="updateCode">Short code</label>
+      <input id="updateCode" type="text" placeholder="abc123" />
+      <label for="updateUrl">Nueva URL</label>
+      <input id="updateUrl" type="text" placeholder="https://example.com/updated" />
+      <div class="row">
+        <button onclick="updateShortUrl()">PUT /shorten/{code}</button>
+      </div>
+      <div id="updateResult" class="result"></div>
+    </div>
+
+    <div class="card">
+      <h3>Eliminar Short URL</h3>
+      <label for="deleteCode">Short code</label>
+      <input id="deleteCode" type="text" placeholder="abc123" />
+      <div class="row">
+        <button class="warning" onclick="deleteShortUrl()">DELETE /shorten/{code}</button>
+      </div>
+      <div id="deleteResult" class="result"></div>
+    </div>
+  </div>
+
+  <div class="card" style="margin-top:16px;">
+    <h3>Historial local</h3>
+    <div class="muted">Solo guarda lo creado desde este navegador. Puedes gestionar cada ítem con acciones rápidas.</div>
+    <div id="historyEmpty" class="muted" style="margin-top:8px;">Sin elementos todavía.</div>
+    <div style="overflow:auto;">
+      <table class="table" id="historyTable" style="display:none;">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Short</th>
+            <th>Original</th>
+            <th>Creado</th>
+            <th>Actualizado</th>
+            <th>Acciones</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody"></tbody>
+      </table>
+    </div>
   </div>
 </div>
 
 <script>
+const originBase = window.location.origin;
+document.getElementById('baseRedirect').textContent = originBase + '/r/{shortCode}';
+
+function clearField(id) {
+  const el = document.getElementById(id);
+  if (el) el.value = '';
+}
+
+function pretty(el, res, data) {
+  el.innerHTML = `<div>HTTP ${res.status} ${res.statusText || ''}</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+}
+
+function showError(el, e) {
+  el.innerHTML = `<div style="color:#dc2626;">Error: ${e?.message || e}</div>`;
+}
+
+function computeShortLink(code) {
+  return `${originBase}/r/${code}`;
+}
+
+function saveHistory(item) {
+  const key = 'url_shortener_history';
+  const arr = JSON.parse(localStorage.getItem(key) || '[]');
+  const idx = arr.findIndex(x => x.shortCode === item.shortCode);
+  if (idx >= 0) arr[idx] = item; else arr.unshift(item);
+  localStorage.setItem(key, JSON.stringify(arr));
+  renderHistory();
+}
+
+function removeFromHistory(code) {
+  const key = 'url_shortener_history';
+  const arr = JSON.parse(localStorage.getItem(key) || '[]').filter(x => x.shortCode !== code);
+  localStorage.setItem(key, JSON.stringify(arr));
+  renderHistory();
+}
+
+function renderHistory() {
+  const key = 'url_shortener_history';
+  const arr = JSON.parse(localStorage.getItem(key) || '[]');
+  const table = document.getElementById('historyTable');
+  const empty = document.getElementById('historyEmpty');
+  const body = document.getElementById('historyBody');
+  if (!arr.length) {
+    table.style.display = 'none';
+    empty.style.display = 'block';
+    body.innerHTML = '';
+    return;
+  }
+  table.style.display = 'table';
+  empty.style.display = 'none';
+  body.innerHTML = arr.map(item => `
+    <tr>
+      <td>${item.id || '-'}</td>
+      <td>
+        <div><code>${item.shortCode}</code></div>
+        <div class="muted"><a href="${computeShortLink(item.shortCode)}" target="_blank">${computeShortLink(item.shortCode)}</a></div>
+      </td>
+      <td style="max-width:360px; word-break:break-all;">${item.url}</td>
+      <td>${item.createdAt ? new Date(item.createdAt).toLocaleString() : '-'}</td>
+      <td>${item.updatedAt ? new Date(item.updatedAt).toLocaleString() : '-'}</td>
+      <td>${(item.accessCount ?? '-') }</td>
+      <td class="actions">
+        <button class="secondary" onclick="navigator.clipboard.writeText('${item.shortCode}')">Copiar código</button>
+        <button class="secondary" onclick="window.open('${computeShortLink(item.shortCode)}','_blank')">Abrir</button>
+        <button onclick="quickStats('${item.shortCode}')">Stats</button>
+        <button onclick="prefillUpdate('${item.shortCode}', '${encodeURIComponent(item.url)}')">Prefill Update</button>
+        <button class="warning" onclick="quickDelete('${item.shortCode}')">Eliminar</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+function prefillUpdate(code, encUrl) {
+  document.getElementById('updateCode').value = code;
+  document.getElementById('updateUrl').value = decodeURIComponent(encUrl);
+}
+
+async function quickStats(code) {
+  document.getElementById('code').value = code;
+  await getStats();
+}
+
+async function quickDelete(code) {
+  document.getElementById('deleteCode').value = code;
+  await deleteShortUrl();
+}
+
 async function createShortUrl() {
   const url = document.getElementById('createUrl').value.trim();
   const resEl = document.getElementById('createResult');
+  const infoEl = document.getElementById('createInfo');
   resEl.textContent = '...';
+  infoEl.textContent = '';
   try {
     const res = await fetch('/shorten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
     const data = await res.json();
-    resEl.innerHTML = `<div>Response (${res.status}):</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+    pretty(resEl, res, data);
+    if (res.ok) {
+      const shortLink = computeShortLink(data.shortCode);
+      infoEl.innerHTML = `Short URL: <a href="${shortLink}" target="_blank">${shortLink}</a> <span class="pill">${data.shortCode}</span>`;
+      saveHistory(data);
+    }
   } catch (e) { resEl.textContent = e.message; }
 }
 
@@ -64,7 +223,8 @@ async function getUrl() {
   try {
     const res = await fetch(`/shorten/${code}`);
     const data = await res.json();
-    resEl.innerHTML = `<div>Response (${res.status}):</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+    pretty(resEl, res, data);
+    if (res.ok) saveHistory(data);
   } catch (e) { resEl.textContent = e.message; }
 }
 
@@ -75,9 +235,47 @@ async function getStats() {
   try {
     const res = await fetch(`/shorten/${code}/stats`);
     const data = await res.json();
-    resEl.innerHTML = `<div>Response (${res.status}):</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+    pretty(resEl, res, data);
+    if (res.ok) saveHistory(data);
   } catch (e) { resEl.textContent = e.message; }
 }
+
+async function updateShortUrl() {
+  const code = document.getElementById('updateCode').value.trim();
+  const url = document.getElementById('updateUrl').value.trim();
+  const resEl = document.getElementById('updateResult');
+  resEl.textContent = '...';
+  try {
+    const res = await fetch(`/shorten/${code}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await res.json();
+    pretty(resEl, res, data);
+    if (res.ok) saveHistory(data);
+  } catch (e) { showError(resEl, e); }
+}
+
+async function deleteShortUrl() {
+  const code = document.getElementById('deleteCode').value.trim();
+  const resEl = document.getElementById('deleteResult');
+  resEl.textContent = '...';
+  try {
+    const res = await fetch(`/shorten/${code}`, { method: 'DELETE' });
+    if (res.status === 204) {
+      resEl.innerHTML = '<div>HTTP 204 No Content</div>';
+      removeFromHistory(code);
+    } else {
+      const data = await res.json();
+      pretty(resEl, res, data);
+    }
+  } catch (e) { showError(resEl, e); }
+}
+
+function openRedirect() {
+  const code = document.getElementById('code').value.trim();
+  if (!code) return;
+  window.open(computeShortLink(code), '_blank');
+}
+
+renderHistory();
 </script>
 </body>
 </html>
