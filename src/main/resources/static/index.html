@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>URL Shortening Service</title>
+  <style>
+    :root { font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif; color: #1f2937; }
+    body { margin: 0; background: #f9fafb; }
+    .container { max-width: 820px; margin: 40px auto; background: white; border-radius: 12px; padding: 24px; box-shadow: 0 10px 25px rgba(0,0,0,0.08); }
+    h1 { margin-top: 0; font-size: 28px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 10px; padding: 16px; margin: 16px 0; }
+    label { display:block; margin-bottom: 8px; font-weight: 600; }
+    input[type="text"] { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 8px; font-size: 14px; }
+    button { background: #2563eb; color: white; border: none; padding: 10px 16px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    button:hover { background: #1d4ed8; }
+    .row { display: flex; gap: 12px; align-items: center; margin-top: 10px; }
+    .result { background: #f3f4f6; padding: 12px; border-radius: 8px; word-break: break-all; }
+    code { background: #111827; color:#f9fafb; padding: 2px 6px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>URL Shortening Service</h1>
+
+  <div class="card">
+    <h3>Create Short URL</h3>
+    <label for="createUrl">Original URL</label>
+    <input id="createUrl" type="text" placeholder="https://example.com/very/long/path" />
+    <div class="row">
+      <button onclick="createShortUrl()">Create</button>
+    </div>
+    <div id="createResult" class="result"></div>
+  </div>
+
+  <div class="card">
+    <h3>Retrieve Original URL</h3>
+    <label for="code">Short Code</label>
+    <input id="code" type="text" placeholder="abc123" />
+    <div class="row">
+      <button onclick="getUrl()">Get</button>
+      <button onclick="getStats()">Stats</button>
+    </div>
+    <div id="getResult" class="result"></div>
+  </div>
+</div>
+
+<script>
+async function createShortUrl() {
+  const url = document.getElementById('createUrl').value.trim();
+  const resEl = document.getElementById('createResult');
+  resEl.textContent = '...';
+  try {
+    const res = await fetch('/shorten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ url }) });
+    const data = await res.json();
+    resEl.innerHTML = `<div>Response (${res.status}):</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+  } catch (e) { resEl.textContent = e.message; }
+}
+
+async function getUrl() {
+  const code = document.getElementById('code').value.trim();
+  const resEl = document.getElementById('getResult');
+  resEl.textContent = '...';
+  try {
+    const res = await fetch(`/shorten/${code}`);
+    const data = await res.json();
+    resEl.innerHTML = `<div>Response (${res.status}):</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+  } catch (e) { resEl.textContent = e.message; }
+}
+
+async function getStats() {
+  const code = document.getElementById('code').value.trim();
+  const resEl = document.getElementById('getResult');
+  resEl.textContent = '...';
+  try {
+    const res = await fetch(`/shorten/${code}/stats`);
+    const data = await res.json();
+    resEl.innerHTML = `<div>Response (${res.status}):</div><pre>${JSON.stringify(data, null, 2)}</pre>`;
+  } catch (e) { resEl.textContent = e.message; }
+}
+</script>
+</body>
+</html>
