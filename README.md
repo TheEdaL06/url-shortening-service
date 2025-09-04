@@ -1,6 +1,6 @@
 # URL Shortening Service (Java + Spring Boot + MySQL)
 
-Project URL: https://roadmap.sh/projects/realtime-leaderboard-system
+Project URL: https://roadmap.sh/projects/url-shortening-service
 
 A simple, clean RESTful API to create, retrieve, update, delete short URLs and fetch access statistics. Includes an optional redirect endpoint and a minimal frontend at `/`.
 
